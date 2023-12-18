@@ -15,7 +15,19 @@ def load_and_preprocess_data(args):
     # Reform splits
     df_train = df.loc[df_train.index, :]
     df_test = df.loc[df_test.index, :]
-    return df_train, df_test 
+    y_train = df_train['SalePrice']
+    y_test = df_test['SalePrice']
+    x_train = df_train.drop('SalePrice', axis=1)
+    x_test = df_test.drop('SalePrice', axis=1)
+
+    x_train, x_test, y_train, y_test = x_train.to_numpy(), x_test.to_numpy(), y_train.to_numpy(), y_test.to_numpy()
+    data = {'x_train': x_train.tolist(), 'y_train': y_train.tolist(), 'x_test': x_test.tolist(), 'y_test': y_test.tolist()}
+
+    data_json = json.dumps(data)
+    # Saves the json object into a file
+    with open(args.data, 'w') as out_file:
+        json.dump(data_json, out_file)
+    
 
 def clean(df):
     df["Exterior2nd"] = df["Exterior2nd"].replace({"Brk Cmn": "BrkComm"})
@@ -30,52 +42,51 @@ def clean(df):
     }, inplace=True,
     )
     return df
-
-# The numeric features are already encoded correctly (`float` for
-# continuous, `int` for discrete), but the categoricals we'll need to
-# do ourselves. Note in particular, that the `MSSubClass` feature is
-# read as an `int` type, but is actually a (nominative) categorical.
-
-# The nominative (unordered) categorical features
-features_nom = ["MSSubClass", "MSZoning", "Street", "Alley", "LandContour", "LotConfig", "Neighborhood", "Condition1", "Condition2", "BldgType", "HouseStyle", "RoofStyle", "RoofMatl", "Exterior1st", "Exterior2nd", "MasVnrType", "Foundation", "Heating", "CentralAir", "GarageType", "MiscFeature", "SaleType", "SaleCondition"]
-
-# Pandas calls the categories "levels"
-five_levels = ["Po", "Fa", "TA", "Gd", "Ex"]
-ten_levels = list(range(10))
-
-ordered_levels = {
-    "OverallQual": ten_levels,
-    "OverallCond": ten_levels,
-    "ExterQual": five_levels,
-    "ExterCond": five_levels,
-    "BsmtQual": five_levels,
-    "BsmtCond": five_levels,
-    "HeatingQC": five_levels,
-    "KitchenQual": five_levels,
-    "FireplaceQu": five_levels,
-    "GarageQual": five_levels,
-    "GarageCond": five_levels,
-    "PoolQC": five_levels,
-    "LotShape": ["Reg", "IR1", "IR2", "IR3"],
-    "LandSlope": ["Sev", "Mod", "Gtl"],
-    "BsmtExposure": ["No", "Mn", "Av", "Gd"],
-    "BsmtFinType1": ["Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"],
-    "BsmtFinType2": ["Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"],
-    "Functional": ["Sal", "Sev", "Maj1", "Maj2", "Mod", "Min2", "Min1", "Typ"],
-    "GarageFinish": ["Unf", "RFn", "Fin"],
-    "PavedDrive": ["N", "P", "Y"],
-    "Utilities": ["NoSeWa", "NoSewr", "AllPub"],
-    "CentralAir": ["N", "Y"],
-    "Electrical": ["Mix", "FuseP", "FuseF", "FuseA", "SBrkr"],
-    "Fence": ["MnWw", "GdWo", "MnPrv", "GdPrv"],
-}
-
-# Add a None level for missing values
-ordered_levels = {key: ["None"] + value for key, value in
-                  ordered_levels.items()}
-
+  
 
 def encode(df):
+    # The numeric features are already encoded correctly (`float` for
+    # continuous, `int` for discrete), but the categoricals we'll need to
+    # do ourselves. Note in particular, that the `MSSubClass` feature is
+    # read as an `int` type, but is actually a (nominative) categorical.
+
+    # The nominative (unordered) categorical features
+    features_nom = ["MSSubClass", "MSZoning", "Street", "Alley", "LandContour", "LotConfig", "Neighborhood", "Condition1", "Condition2", "BldgType", "HouseStyle", "RoofStyle", "RoofMatl", "Exterior1st", "Exterior2nd", "MasVnrType", "Foundation", "Heating", "CentralAir", "GarageType", "MiscFeature", "SaleType", "SaleCondition"]
+
+    # Pandas calls the categories "levels"
+    five_levels = ["Po", "Fa", "TA", "Gd", "Ex"]
+    ten_levels = list(range(10))
+
+    ordered_levels = {
+        "OverallQual": ten_levels,
+        "OverallCond": ten_levels,
+        "ExterQual": five_levels,
+        "ExterCond": five_levels,
+        "BsmtQual": five_levels,
+        "BsmtCond": five_levels,
+        "HeatingQC": five_levels,
+        "KitchenQual": five_levels,
+        "FireplaceQu": five_levels,
+        "GarageQual": five_levels,
+        "GarageCond": five_levels,
+        "PoolQC": five_levels,
+        "LotShape": ["Reg", "IR1", "IR2", "IR3"],
+        "LandSlope": ["Sev", "Mod", "Gtl"],
+        "BsmtExposure": ["No", "Mn", "Av", "Gd"],
+        "BsmtFinType1": ["Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"],
+        "BsmtFinType2": ["Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"],
+        "Functional": ["Sal", "Sev", "Maj1", "Maj2", "Mod", "Min2", "Min1", "Typ"],
+        "GarageFinish": ["Unf", "RFn", "Fin"],
+        "PavedDrive": ["N", "P", "Y"],
+        "Utilities": ["NoSeWa", "NoSewr", "AllPub"],
+        "CentralAir": ["N", "Y"],
+        "Electrical": ["Mix", "FuseP", "FuseF", "FuseA", "SBrkr"],
+        "Fence": ["MnWw", "GdWo", "MnPrv", "GdPrv"],
+    }
+
+    # Add a None level for missing values
+    ordered_levels = {key: ["None"] + value for key, value in
+                    ordered_levels.items()}
     # Nominal categories
     for name in features_nom:
         df[name] = df[name].astype("category")
@@ -89,26 +100,13 @@ def encode(df):
     return df
 
 def impute(df):
-    for name in df.select_dtypes("number"):
-        df[name] = df[name].fillna(0)
-    for name in df.select_dtypes("category"):
-        df[name] = df[name].fillna("None")
+    df.fillna(value=0, inplace=True, numeric_only=True)
+    # Sostituisci i valori mancanti di tipo categorico con "None"
+    df.fillna(value="None", inplace=True)
     return df
 
-y_train = df_train['SalePrice']
-y_test = df_test['SalePrice']
-x_train = df_train.drop('SalePrice', axis=1)
-x_test = df_test.drop('SalePrice', axis=1)
 
-x_train, x_test, y_train, y_test = x_train.to_numpy(), x_test.to_numpy(), y_train.to_numpy(), y_test.to_numpy()
-data = {'x_train': x_train.tolist(), 'y_train': y_train.tolist(), 'x_test': x_test.tolist(), 'y_test': y_test.tolist()}
 
-data_json = json.dumps(data)
-# Saves the json object into a file
-with open(args.data, 'w') as out_file:
-    json.dump(data_json, out_file)
-
-df_train, df_test = load_and_preprocess_data()
 
 if __name__ == '__main__':
     
