@@ -1,6 +1,5 @@
 import pandas as pd
 from pandas.api.types import CategoricalDtype
-from category_encoders import MEstimateEncoder
 import json
 
 def load_and_preprocess_data(args):
