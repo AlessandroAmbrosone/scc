@@ -100,9 +100,12 @@ def encode(df):
     return df
 
 def impute(df):
-    df.fillna(value=0, inplace=True, numeric_only=True)
+    numeric_columns = df.select_dtypes(include='number').columns
+    df[numeric_columns] = df[numeric_columns].fillna(value=0)
+
     # Sostituisci i valori mancanti di tipo categorico con "None"
-    df.fillna(value="None", inplace=True)
+    categorical_columns = df.select_dtypes(include='object').columns
+    df[categorical_columns] = df[categorical_columns].fillna(value="None")
     return df
 
 
