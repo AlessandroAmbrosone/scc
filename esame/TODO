@@ -1,0 +1,8 @@
+Abbiamo caricato anche su docker Hub fino al component train, sembra funzionare
+Ora da fare c'è:
+    -creare la pipeleine principale, dove prendiamo i risultati del component train(da vedere come poichè abbiamo chiave come stringa),
+    che sarebbe i migliori parametri da usare
+    -caricare il modello con quei parametri
+    -fare le prediction
+    -creare la pipeline vera e propria come in Diabetes_pipeline, quindi tipo:
+        load_data-> processed_data-> train ->.....

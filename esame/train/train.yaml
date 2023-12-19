@@ -1,0 +1,22 @@
+name: Evaluate best parameter for model Function
+description: Process data from  train_dataset
+
+
+inputs:
+- {name: Processed_Data, type: LocalPath, description: 'Path where processed_data is stored.'}
+outputs:
+- {name: Results, type: LocalPath, description: 'Path where results of grid search will be stored.'}
+
+implementation:
+  container:
+    image: ossalag00/trainv1
+    command: [
+      python, train.py,
+
+      --processed_data,
+      {inputPath: Processed_Data},
+
+      --results,
+      {outputPath: Results},
+
+    ]

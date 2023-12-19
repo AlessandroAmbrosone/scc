@@ -57,7 +57,7 @@ def _process_data(args):
 
     processed_data = preprocessor.fit_transform(df_x_train)
     # Creates a json object based on `data`
-    processed_data = {'x_train': processed_data.tolist()}
+    processed_data = {'x_train': processed_data.tolist(),'y_train' : data['y_train']}
 
     # Saves the json object into a file
     with open(args.process_data, 'w') as out_file:
