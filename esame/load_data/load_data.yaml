@@ -6,7 +6,7 @@ outputs:
 
 implementation:
   container:
-    image: //da aggiungere
+    image: ossalag00/load_datav1
     command: [
       python, load_data.py,
 
