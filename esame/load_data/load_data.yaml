@@ -6,7 +6,7 @@ outputs:
 
 implementation:
   container:
-    image: 
+    image: //da aggiungere
     command: [
       python, load_data.py,
 
