@@ -21,7 +21,8 @@ def _load_data(args):
 
     X_train.head()
     
-    X_train, X_test, y_train = X_train.to_numpy(), X_test.to_numpy(), y_train.to_numpy()
+    X_train, X_test, y_train = X_train.to_numpy(), X_test.to_numpy(), y_train.to_numpy() #qui ho eliminato y_test, a parte che non c'è nei dati di test
+    #ma poi non credo ci serva, os baglio?
 
     # Creates `data` structure to save and 
     # share train and test datasets.
