@@ -1,5 +1,6 @@
-Abbiamo caricato anche su docker Hub fino al component train, sembra funzionare
+Abbiamo caricato anche su docker Hub fino al component best_param, sembra funzionare (da rifare poichè sono cambiate delle cose)
 Ora da fare c'è:
+    - sistemare component train, ho messo anche predict dentro qua, ma non va a buon fine, leggi train.py
     -creare la pipeleine principale, dove prendiamo i risultati del component train(da vedere come poichè abbiamo chiave come stringa),
     che sarebbe i migliori parametri da usare
     -caricare il modello con quei parametri

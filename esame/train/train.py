@@ -4,62 +4,70 @@ import json
 import argparse
 import pandas as pd
 from pathlib import Path
+import joblib 
 
-
-
-def _get_scores(args,n_estimators, learning_rate):
-        # Open and reads file "data"
+def _train(args):
+    # Open and reads file "data"
     with open(args.processed_data) as data_file:
         data = json.load(data_file)
+    with open(args.best_parameter) as bp_file:
+        best_p = json.load(bp_file)
     
-    # The excted data type is 'dict', however since the file
-    # was loaded as a json object, it is first loaded as a string
-    # thus we need to load again from such string in order to get 
-    # the dict-type object.
-    #data = json.loads(data)
+    # Finding the key with the minimum value and extracting the parts
+    min_key = min(best_p, key=best_p.get)
+    n_estimators, lr = min_key.split('_')
+    
+    # Convert n_estimators to int and lr to float
+    n_estimators = int(n_estimators)
+    lr = float(lr)
 
-    X_train = data['x_train']
-    y_train = data['y_train']
-    df_x = pd.DataFrame(X_train)
-    df_y = pd.DataFrame(y_train)
+    print("Minimum Value Variables:", n_estimators, lr)
+
+    # Data preparation
+    X_train, y_train,X_test = data['x_train'], data['y_train'],data['x_test']
+    df_x, df_y, df_x_test= pd.DataFrame(X_train), pd.DataFrame(y_train), pd.DataFrame(X_test)
+
+    #La predict del modello non va a buon fine, poichè il numero di feaures del test è diverso da quello del train, ho dato un occhiata veloce
+    #forse errore potrebbe essere in load_data.py, poiihcè su X_train facciamo dei drop e su x_test no, ma vedendo meglio forse non c'è bisogno 
+    #quindi bohhhh!!!!
+
+    
+    # Check if the number of features is the same
+    print(df_x.shape[1], df_x_test.shape[1])
+    if not df_x.columns.equals(df_x_test.columns):
+        print("Feature names/order mismatch")
+
+    # Model initialization and fitting
     xgb_regressor_model = XGBRegressor(n_estimators=n_estimators,
-                                       learning_rate=learning_rate,
+                                       learning_rate=lr,
                                        random_state=0,
                                        n_jobs=4)
+    xgb_regressor_model.fit(df_x, df_y)
 
-    
-    
-    scores = -1 * cross_val_score(xgb_regressor_model, df_x, df_y, cv=3, scoring="neg_mean_absolute_error")
-    
-    return scores.mean()
+    # Save the model
+    joblib.dump(xgb_regressor_model, args.model)
+    print(f"Model saved as {args.model}")
+    # Replace this with the path to your saved model
+    #model_path = 'path/to/your/saved_model.bin'
 
-# Training the model and finding the appropriate values
+    # Load the model
+    #loaded_model = joblib.load(model_path)
 
-def _collect_result(args):
-    results = {}
-
-    for i in range(8, 13):
-        for j in range(3):
-            key = f"{100*i}_{0.04 + 0.01*j}"  # Convert tuple to a string key
-            results[key] = _get_scores(args, 100*i, 0.04 + 0.01*j)
-    
-
-    # Saves the json object into a file
-    with open(args.results, 'w') as out_file:
-        json.dump(results, out_file)
-
-
+    #Prediction 
+    predicts = xgb_regressor_model.predict(df_x_test)
+    print("preds:", predicts)
 
 if __name__ == '__main__':
 
     # Defining and parsing the command-line arguments
     parser = argparse.ArgumentParser(description='My process data')
     parser.add_argument('--processed_data', type=str)
-    parser.add_argument('--results', type=str)
+    parser.add_argument('--best_parameter', type=str)
+    parser.add_argument('--model', type=str)
 
     args = parser.parse_args()
 
     # Creating the directory where the output file will be created (the directory may or may not exist).
-    Path(args.results).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.model).parent.mkdir(parents=True, exist_ok=True)
     
-    _collect_result(args)
+    _train(args)

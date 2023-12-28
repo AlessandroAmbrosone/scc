@@ -28,13 +28,21 @@ def _process_data(args):
     
 
     X_train = data['x_train']
+    X_test = data['x_test']
     df_x_train = pd.DataFrame(X_train)
+    df_x_test = pd.DataFrame(X_test)
 
     low_cardinality_columns = [col for col in df_x_train.columns if df_x_train[col].nunique() < 10 and df_x_train[col].dtype == "object"]
     num_columns = [col for col in df_x_train.columns if df_x_train[col].dtype in ["int64", "float64"]]
 
     required_columns = low_cardinality_columns + num_columns
     high_cardinality_columns = [col for col in df_x_train.columns if col not in required_columns]
+
+    low_cardinality_columns_t = [col for col in df_x_test.columns if df_x_test[col].nunique() < 10 and df_x_test[col].dtype == "object"]
+    num_columns_t = [col for col in df_x_test.columns if df_x_test[col].dtype in ["int64", "float64"]]
+
+    required_columns_t = low_cardinality_columns_t + num_columns_t
+    high_cardinality_columns_t= [col for col in df_x_test.columns if col not in required_columns_t]
 
     #print(required_columns)
     #print("Dropped_columns", high_cardinality_columns)
@@ -54,10 +62,16 @@ def _process_data(args):
             ("num", numerical_transformer, num_columns),
             ("categorical", categorical_transformer, low_cardinality_columns)
         ])
+    preprocessor_t = ColumnTransformer(
+        transformers=[
+            ("num", numerical_transformer, num_columns_t),
+            ("categorical", categorical_transformer, low_cardinality_columns_t)
+        ])
 
-    processed_data = preprocessor.fit_transform(df_x_train)
+    processed_data_train = preprocessor.fit_transform(df_x_train)
+    processed_data_test = preprocessor_t.fit_transform(df_x_test)
     # Creates a json object based on `data`
-    processed_data = {'x_train': processed_data.tolist(),'y_train' : data['y_train']}
+    processed_data = {'x_train': processed_data_train.tolist(),'y_train' : data['y_train'],'x_test': processed_data_test.tolist()} #forse da aggiungere qui anche X_test, se no come predicto dopo in train??
 
     # Saves the json object into a file
     with open(args.process_data, 'w') as out_file:
