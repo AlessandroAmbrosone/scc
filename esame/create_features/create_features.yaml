@@ -9,7 +9,7 @@ outputs:
 
 implementation:
   container:
-    image: ossalag00/create_featurev1
+    image: ossalag00/create_featuresv2
     command: [
       python, create_feature.py,
 
@@ -17,6 +17,6 @@ implementation:
       {inputPath: Data},
 
       --process_data,
-      {outputPath: Processed_data},
+      {outputPath: Processed_Data},
 
     ]

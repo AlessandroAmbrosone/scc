@@ -1,3 +1,2 @@
-pickle
 scikit-learn
 xgboost

@@ -9,7 +9,7 @@ outputs:
 
 implementation:
   container:
-    image: ossalag00/best_paramv1
+    image: ossalag00/best_paramv2
     command: [
       python, train.py,
 

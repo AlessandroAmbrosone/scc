@@ -6,11 +6,11 @@ inputs:
 - {name: Processed_Data, type: LocalPath, description: 'Path where processed_data is stored.'}
 - {name: Best_Parameters, type: LocalPath, description: 'Path where best parameter are stored.'}
 outputs:
-- {name: Results, type: LocalPath, description: 'Path where dump of model will be saved.'}
+- {name: Model, type: LocalPath, description: 'Path where dump of model will be saved.'}
 
 implementation:
   container:
-    image: ossalag00/trainv1
+    image: ossalag00/trainv2
     command: [
       python, train.py,
 
@@ -18,9 +18,9 @@ implementation:
       {inputPath: Processed_Data},
 
       --best_parameters,
-      {inputhPath: Best_Parameters},
+      {inputPath: Best_Parameters},
 
-      --results,
-      {outputPath: Results},
+      --model,
+      {outputPath: Model},
 
     ]

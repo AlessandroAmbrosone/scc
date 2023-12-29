@@ -70,7 +70,7 @@ if __name__ == '__main__':
     # Defining and parsing the command-line arguments
     parser = argparse.ArgumentParser(description='My process data')
     parser.add_argument('--processed_data', type=str)
-    parser.add_argument('--best_parameter', type=str)
+    parser.add_argument('--best_parameters', type=str)
     parser.add_argument('--model', type=str)
 
     args = parser.parse_args()

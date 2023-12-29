@@ -30,7 +30,7 @@ def house_pipeline():
     # Loads the yaml manifest for each component
     load = kfp.components.load_component_from_file('load_data/load_data.yaml')
     create_fetures = kfp.components.load_component_from_file('create_features/create_features.yaml')
-    best_param = kfp.components.load_component_from_file('best_param/bast_param.yaml')
+    best_param = kfp.components.load_component_from_file('best_param/best_param.yaml')
     train = kfp.components.load_component_from_file('train/train.yaml')
 
     # Run load_data task

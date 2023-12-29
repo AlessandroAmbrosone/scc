@@ -1,0 +1,210 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: house-pipeline-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.22, pipelines.kubeflow.org/pipeline_compilation_time: '2023-12-29T13:06:18.992942',
+    pipelines.kubeflow.org/pipeline_spec: '{"name": "House Pipeline"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.22}
+spec:
+  entrypoint: house-pipeline
+  templates:
+  - name: create-feture-function
+    container:
+      args: []
+      command: [python, create_feature.py, --data, /tmp/inputs/Data/data, --process_data,
+        /tmp/outputs/Processed_Data/data]
+      image: ossalag00/create_featuresv2
+    inputs:
+      artifacts:
+      - {name: load-data-function-Data, path: /tmp/inputs/Data/data}
+    outputs:
+      parameters:
+      - name: create-feture-function-Processed_Data
+        valueFrom: {path: /tmp/outputs/Processed_Data/data}
+      artifacts:
+      - {name: create-feture-function-Processed_Data, path: /tmp/outputs/Processed_Data/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Process
+          data from  train_dataset", "implementation": {"container": {"command": ["python",
+          "create_feature.py", "--data", {"inputPath": "Data"}, "--process_data",
+          {"outputPath": "Processed_Data"}], "image": "ossalag00/create_featuresv2"}},
+          "inputs": [{"description": "Path where data is stored.", "name": "Data",
+          "type": "LocalPath"}], "name": "Create feture Function", "outputs": [{"description":
+          "Path where processed_data will be stored.", "name": "Processed_Data", "type":
+          "LocalPath"}]}', pipelines.kubeflow.org/component_ref: '{"digest": "8f86cba4ff1be541d6260a3236d544f8613c7932d7e44a8f2d25173d642db2d6",
+          "url": "create_features/create_features.yaml"}'}
+  - name: evaluate-best-parameter-for-model-function
+    container:
+      args: []
+      command: [python, train.py, --processed_data, /tmp/inputs/Processed_Data/data,
+        --results, /tmp/outputs/Results/data]
+      image: ossalag00/best_paramv2
+    inputs:
+      artifacts:
+      - {name: create-feture-function-Processed_Data, path: /tmp/inputs/Processed_Data/data}
+    outputs:
+      artifacts:
+      - {name: evaluate-best-parameter-for-model-function-Results, path: /tmp/outputs/Results/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Find
+          the best parameters to train the model", "implementation": {"container":
+          {"command": ["python", "train.py", "--processed_data", {"inputPath": "Processed_Data"},
+          "--results", {"outputPath": "Results"}], "image": "ossalag00/best_paramv2"}},
+          "inputs": [{"description": "Path where processed_data is stored.", "name":
+          "Processed_Data", "type": "LocalPath"}], "name": "Evaluate best parameter
+          for model Function", "outputs": [{"description": "Path where results of
+          grid search will be stored.", "name": "Results", "type": "LocalPath"}]}',
+        pipelines.kubeflow.org/component_ref: '{"digest": "b95996385fdea2895cfe4e06ec3d01abd12d0a1d86e26ae8844cb43c77e6093e",
+          "url": "best_param/best_param.yaml"}'}
+  - name: house-pipeline
+    dag:
+      tasks:
+      - name: create-feture-function
+        template: create-feture-function
+        dependencies: [load-data-function]
+        arguments:
+          artifacts:
+          - {name: load-data-function-Data, from: '{{tasks.load-data-function.outputs.artifacts.load-data-function-Data}}'}
+      - name: evaluate-best-parameter-for-model-function
+        template: evaluate-best-parameter-for-model-function
+        dependencies: [create-feture-function]
+        arguments:
+          artifacts:
+          - {name: create-feture-function-Processed_Data, from: '{{tasks.create-feture-function.outputs.artifacts.create-feture-function-Processed_Data}}'}
+      - {name: load-data-function, template: load-data-function}
+      - name: make-predictions
+        template: make-predictions
+        dependencies: [create-feture-function, train-for-model-function]
+        arguments:
+          parameters:
+          - {name: create-feture-function-Processed_Data, value: '{{tasks.create-feture-function.outputs.parameters.create-feture-function-Processed_Data}}'}
+          - {name: train-for-model-function-Model, value: '{{tasks.train-for-model-function.outputs.parameters.train-for-model-function-Model}}'}
+      - name: train-for-model-function
+        template: train-for-model-function
+        dependencies: [create-feture-function, evaluate-best-parameter-for-model-function]
+        arguments:
+          artifacts:
+          - {name: create-feture-function-Processed_Data, from: '{{tasks.create-feture-function.outputs.artifacts.create-feture-function-Processed_Data}}'}
+          - {name: evaluate-best-parameter-for-model-function-Results, from: '{{tasks.evaluate-best-parameter-for-model-function.outputs.artifacts.evaluate-best-parameter-for-model-function-Results}}'}
+  - name: load-data-function
+    container:
+      args: []
+      command: [python, load_data.py, --data, /tmp/outputs/Data/data]
+      image: ossalag00/load_datav2
+    outputs:
+      artifacts:
+      - {name: load-data-function-Data, path: /tmp/outputs/Data/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Load
+          data from local dataset", "implementation": {"container": {"command": ["python",
+          "load_data.py", "--data", {"outputPath": "Data"}], "image": "ossalag00/load_datav2"}},
+          "name": "Load Data Function", "outputs": [{"description": "Path where data
+          will be stored.", "name": "Data", "type": "LocalPath"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "8183b7567cb8979d80093f13c7c29d1a54e698100b34124c31a044e1bded6f74", "url":
+          "load_data/load_data.yaml"}'}
+  - name: make-predictions
+    container:
+      args: [--model, '{{inputs.parameters.train-for-model-function-Model}}', --data,
+        '{{inputs.parameters.create-feture-function-Processed_Data}}']
+      command:
+      - sh
+      - -ec
+      - |
+        program_path=$(mktemp)
+        printf "%s" "$0" > "$program_path"
+        python3 -u "$program_path" "$@"
+      - |
+        def make_predictions(model, data):
+
+            data = json.loads(data)
+
+            x_train = data['x_train']
+            y_train = data['y_train']
+            x_test = data['x_test']
+            y_test = data['y_test']
+
+            y_pred = model.predict(x_test)
+            accuracy = accuracy_score(y_test, y_pred)
+
+            print(f"Accuracy: {accuracy}")
+
+        import argparse
+        _parser = argparse.ArgumentParser(prog='Make predictions', description='')
+        _parser.add_argument("--model", dest="model", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--data", dest="data", type=str, required=True, default=argparse.SUPPRESS)
+        _parsed_args = vars(_parser.parse_args())
+
+        _outputs = make_predictions(**_parsed_args)
+      image: python:3.7
+    inputs:
+      parameters:
+      - {name: create-feture-function-Processed_Data}
+      - {name: train-for-model-function-Model}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+          {"args": ["--model", {"inputValue": "model"}, "--data", {"inputValue": "data"}],
+          "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" >
+          \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def make_predictions(model,
+          data):\n\n    data = json.loads(data)\n\n    x_train = data[''x_train'']\n    y_train
+          = data[''y_train'']\n    x_test = data[''x_test'']\n    y_test = data[''y_test'']\n\n    y_pred
+          = model.predict(x_test)\n    accuracy = accuracy_score(y_test, y_pred)\n\n    print(f\"Accuracy:
+          {accuracy}\")\n\nimport argparse\n_parser = argparse.ArgumentParser(prog=''Make
+          predictions'', description='''')\n_parser.add_argument(\"--model\", dest=\"model\",
+          type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--data\",
+          dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+          = vars(_parser.parse_args())\n\n_outputs = make_predictions(**_parsed_args)\n"],
+          "image": "python:3.7"}}, "inputs": [{"name": "model"}, {"name": "data"}],
+          "name": "Make predictions"}', pipelines.kubeflow.org/component_ref: '{}',
+        pipelines.kubeflow.org/arguments.parameters: '{"data": "{{inputs.parameters.create-feture-function-Processed_Data}}",
+          "model": "{{inputs.parameters.train-for-model-function-Model}}"}'}
+  - name: train-for-model-function
+    container:
+      args: []
+      command: [python, train.py, --processed_data, /tmp/inputs/Processed_Data/data,
+        --best_parameters, /tmp/inputs/Best_Parameters/data, --model, /tmp/outputs/Model/data]
+      image: ossalag00/trainv2
+    inputs:
+      artifacts:
+      - {name: evaluate-best-parameter-for-model-function-Results, path: /tmp/inputs/Best_Parameters/data}
+      - {name: create-feture-function-Processed_Data, path: /tmp/inputs/Processed_Data/data}
+    outputs:
+      parameters:
+      - name: train-for-model-function-Model
+        valueFrom: {path: /tmp/outputs/Model/data}
+      artifacts:
+      - {name: train-for-model-function-Model, path: /tmp/outputs/Model/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Train
+          the model with the best parameter found", "implementation": {"container":
+          {"command": ["python", "train.py", "--processed_data", {"inputPath": "Processed_Data"},
+          "--best_parameters", {"inputPath": "Best_Parameters"}, "--model", {"outputPath":
+          "Model"}], "image": "ossalag00/trainv2"}}, "inputs": [{"description": "Path
+          where processed_data is stored.", "name": "Processed_Data", "type": "LocalPath"},
+          {"description": "Path where best parameter are stored.", "name": "Best_Parameters",
+          "type": "LocalPath"}], "name": "Train for model Function", "outputs": [{"description":
+          "Path where dump of model will be saved.", "name": "Model", "type": "LocalPath"}]}',
+        pipelines.kubeflow.org/component_ref: '{"digest": "df947cd97e22e8f062557d58f29d699f70e3a8f97d08660528a4e686e5eb66c2",
+          "url": "train/train.yaml"}'}
+  arguments:
+    parameters: []
+  serviceAccountName: pipeline-runner
