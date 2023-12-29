@@ -70,6 +70,8 @@ def _process_data(args):
 
     processed_data_train = preprocessor.fit_transform(df_x_train)
     processed_data_test = preprocessor_t.fit_transform(df_x_test)
+    print(processed_data_train.shape[1], processed_data_test.shape[1])
+
     # Creates a json object based on `data`
     processed_data = {'x_train': processed_data_train.tolist(),'y_train' : data['y_train'],'x_test': processed_data_test.tolist()} #forse da aggiungere qui anche X_test, se no come predicto dopo in train??
 

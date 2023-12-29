@@ -6,6 +6,19 @@ import pandas as pd
 from pathlib import Path
 import joblib 
 
+
+def align_features(input_data, trained_columns):
+    # Adding missing columns
+    for col in trained_columns:
+        if col not in input_data.columns:
+            input_data[col] = 0
+
+    # Reordering columns
+    return input_data[trained_columns]
+
+
+
+
 def _train(args):
     # Open and reads file "data"
     with open(args.processed_data) as data_file:
@@ -30,12 +43,7 @@ def _train(args):
     #La predict del modello non va a buon fine, poichè il numero di feaures del test è diverso da quello del train, ho dato un occhiata veloce
     #forse errore potrebbe essere in load_data.py, poiihcè su X_train facciamo dei drop e su x_test no, ma vedendo meglio forse non c'è bisogno 
     #quindi bohhhh!!!!
-
     
-    # Check if the number of features is the same
-    print(df_x.shape[1], df_x_test.shape[1])
-    if not df_x.columns.equals(df_x_test.columns):
-        print("Feature names/order mismatch")
 
     # Model initialization and fitting
     xgb_regressor_model = XGBRegressor(n_estimators=n_estimators,
@@ -43,7 +51,11 @@ def _train(args):
                                        random_state=0,
                                        n_jobs=4)
     xgb_regressor_model.fit(df_x, df_y)
-
+    trained_columns = df_x.columns.tolist()
+    # Usage
+    X_test_prepared = align_features(df_x_test, trained_columns)
+    print(df_x.shape[1], df_x_test.shape[1])
+    
     # Save the model
     joblib.dump(xgb_regressor_model, args.model)
     print(f"Model saved as {args.model}")
@@ -54,7 +66,7 @@ def _train(args):
     #loaded_model = joblib.load(model_path)
 
     #Prediction 
-    predicts = xgb_regressor_model.predict(df_x_test)
+    predicts = xgb_regressor_model.predict(X_test_prepared)
     print("preds:", predicts)
 
 if __name__ == '__main__':
