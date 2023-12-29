@@ -73,7 +73,7 @@ def _process_data(args):
     print(processed_data_train.shape[1], processed_data_test.shape[1])
 
     # Creates a json object based on `data`
-    processed_data = {'x_train': processed_data_train.tolist(),'y_train' : data['y_train'],'x_test': processed_data_test.tolist()} #forse da aggiungere qui anche X_test, se no come predicto dopo in train??
+    processed_data = {'x_train': processed_data_train.tolist(),'y_train' : data['y_train'],'x_test': processed_data_test.tolist(), 'y_test' : data['y_test']} #forse da aggiungere qui anche X_test, se no come predicto dopo in train??
 
     # Saves the json object into a file
     with open(args.process_data, 'w') as out_file:

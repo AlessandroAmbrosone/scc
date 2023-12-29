@@ -7,14 +7,14 @@ from pathlib import Path
 import joblib 
 
 
-def align_features(input_data, trained_columns):
+#def align_features(input_data, trained_columns):
     # Adding missing columns
-    for col in trained_columns:
-        if col not in input_data.columns:
-            input_data[col] = 0
+    #for col in trained_columns:
+        #if col not in input_data.columns:
+            #input_data[col] = 0
 
     # Reordering columns
-    return input_data[trained_columns]
+    #return input_data[trained_columns]
 
 
 
@@ -37,12 +37,8 @@ def _train(args):
     print("Minimum Value Variables:", n_estimators, lr)
 
     # Data preparation
-    X_train, y_train,X_test = data['x_train'], data['y_train'],data['x_test']
-    df_x, df_y, df_x_test= pd.DataFrame(X_train), pd.DataFrame(y_train), pd.DataFrame(X_test)
-
-    #La predict del modello non va a buon fine, poichè il numero di feaures del test è diverso da quello del train, ho dato un occhiata veloce
-    #forse errore potrebbe essere in load_data.py, poiihcè su X_train facciamo dei drop e su x_test no, ma vedendo meglio forse non c'è bisogno 
-    #quindi bohhhh!!!!
+    X_train, y_train = data['x_train'], data['y_train']
+    df_x, df_y = pd.DataFrame(X_train), pd.DataFrame(y_train)
     
 
     # Model initialization and fitting
@@ -51,10 +47,10 @@ def _train(args):
                                        random_state=0,
                                        n_jobs=4)
     xgb_regressor_model.fit(df_x, df_y)
-    trained_columns = df_x.columns.tolist()
+    #trained_columns = df_x.columns.tolist()
     # Usage
-    X_test_prepared = align_features(df_x_test, trained_columns)
-    print(df_x.shape[1], df_x_test.shape[1])
+    #X_test_prepared = align_features(df_x_test, trained_columns)
+    #print(df_x.shape[1], df_x_test.shape[1])
     
     # Save the model
     joblib.dump(xgb_regressor_model, args.model)
@@ -66,8 +62,8 @@ def _train(args):
     #loaded_model = joblib.load(model_path)
 
     #Prediction 
-    predicts = xgb_regressor_model.predict(X_test_prepared)
-    print("preds:", predicts)
+    #predicts = xgb_regressor_model.predict(X_test_prepared)
+    #print("preds:", predicts)
 
 if __name__ == '__main__':
 
