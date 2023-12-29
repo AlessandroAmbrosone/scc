@@ -1,0 +1,23 @@
+# Deploying Kubeflow Pipelines, serve per installare kubeflow dentro kubernetes, naturalmente faccio partire anche dashboard kubernetes, seguendo pdf,quindi prima creo yaml per admin, poi role binding
+# e infine kubectl proxy -> poi accedo al link :http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/service?namespace=kubeflow
+
+#poi devo installare kubeflow dentro kubernetes ->
+
+## Installation process for Kubeflow Pipelines 
+
+To deploy the Kubeflow Pipelines, run the following commands:
+
+    export PIPELINE_VERSION=2.0.3
+    kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
+    kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
+    kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/platform-agnostic-pns?ref=$PIPELINE_VERSION"
+
+The Kubeflow Pipelines deployment may take several minutes to complete.
+
+Verify that the Kubeflow Pipelines UI is accessible by port-forwarding:
+
+    kubectl port-forward -n kubeflow svc/ml-pipeline-ui 8080:80
+    
+    
+    
+kubectl get pods --namespace=kubeflow -> per vedere stato dei pods, credo finchè non sono tutti in running mi da problemi la dashboard
