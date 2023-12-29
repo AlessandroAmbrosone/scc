@@ -17,6 +17,9 @@ implementation:
       --processed_data,
       {inputPath: Processed_Data},
 
+      --best_parameters,
+      {inputhPath: Best_Parameters},
+
       --results,
       {outputPath: Results},
 
