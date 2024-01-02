@@ -9,7 +9,7 @@ outputs:
 
 implementation:
   container:
-    image: ossalag00/create_featuresv2 # da cambiare
+    image: ossalag00/g_boost_model # da cambiare
     command: [
       python, g_boost.py,
 

@@ -9,7 +9,7 @@ outputs:
 
 implementation:
   container:
-    image: ossalag00/create_featuresv2 # da cambiare
+    image: ossalag00/linear_regression_model # da cambiare
     command: [
       python, linear_regression.py,
 

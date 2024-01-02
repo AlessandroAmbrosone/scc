@@ -5,44 +5,46 @@ from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
-#dovremmo vedere come passare le cose da load_data a qui , credo basti caricare il json, vedere come fa in decision_tree il prof
-#magari questa parte si può anche mettere in load_data, anche se queste colonne gli servono poi per il modello, quindi boh..
 
 
-# Checking columns
 def _process_data(args):
 
-    # Open and reads file "data"
-    #with open(args.data) as data_file:
-        #data = json.load(data_file)
     
-    # The excted data type is 'dict', however since the file
-    # was loaded as a json object, it is first loaded as a string
-    # thus we need to load again from such string in order to get 
-    # the dict-type object.
-    #data = json.loads(data)
-
+    #Read the data file form inputh path
     pd_X = pd.read_json(args.data,orient='columns')
     
-    #pd_X = data['dataframe']
-    #pd_X = pd.DataFrame(pd_X)
-
+    
+    #Creating Dummie Variables (One hot encoding)
     X_with_dummies = pd.get_dummies(pd_X,dtype=int)
 
-
+    #Drop the Price column cause is useless
     X = X_with_dummies.drop('log_price',axis=1)
+    #Save the label into y
     y = X_with_dummies['log_price']
     
-
+    #StandardScaler is used to standardize the features by removing the mean and scaling to unit variance. 
+    #This is achieved by subtracting the mean value of each feature and then dividing by the standard deviation
     scaler = StandardScaler()
+    #this step is preparing the scaler to standardize the 'Mileage' and 'EngineV' columns. 
+    #It calculates and stores the necessary statistics (mean and standard deviation) based on the data in these columns
     scaler.fit(X[['Mileage','EngineV']])
 
     
     # It is not usually recommended to standardize dummy variables
     #For ML purposes we rarely put too much thought into it and go with the scale dummies as 
     #scaling has no effect on their predictive power.
+    #Uses the scaler object to standardize the 'Mileage' and 'EngineV' features of the dataset X
+    #Applies the scaling transformation based on the mean and standard deviation calculated in the fit method . 
+    #This results in scaled versions of these features where each feature's mean is 0 and standard deviation is 1.
     inputs_scaled = scaler.transform(X[['Mileage','EngineV']])
+    # This line converts inputs_scaled into a Pandas DataFrame.
+    #The columns parameter names the columns as 'Mileage' and 'EngineV', reflecting the original names of the features that were scaled.
     scaled_data = pd.DataFrame(inputs_scaled,columns=['Mileage','EngineV'])
+    # X.drop(['Mileage','EngineV'], axis=1) removes the original 'Mileage' and 'EngineV' columns from the dataset X, keeping all other features intact.
+    #scaled_data.join(...) adds the columns from the result of the drop operation to scaled_data. 
+    #This effectively replaces the original 'Mileage' and 'EngineV' columns in X with their scaled versions.
+    #The final result, input_scaled2, is a DataFrame that includes the scaled 'Mileage' and 'EngineV' features alongside the other, 
+    #unscaled features of the original dataset X.
     input_scaled2 =scaled_data.join(X.drop(['Mileage','EngineV'],axis=1))
     
 
@@ -61,8 +63,10 @@ def _process_data(args):
 if __name__ == '__main__':
 
     # Defining and parsing the command-line arguments
-    parser = argparse.ArgumentParser(description='My process data')
+    parser = argparse.ArgumentParser(description='Process the data and split into train_set and test_set')
+    #Input
     parser.add_argument('--data', type=str)
+    #Output
     parser.add_argument('--processed_data', type=str)
 
     args = parser.parse_args()

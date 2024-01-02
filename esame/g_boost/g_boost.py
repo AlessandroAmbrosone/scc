@@ -7,36 +7,45 @@ import pandas as pd
 import numpy
 from pathlib import Path
 
-def _linear_regression (args):
+
+# Defining the function _gboost_regressor
+def _gboost_regressor (args):
+
+    # Opening the JSON file containing the data
     with open(args.data) as file:
         data = json.load(file)
 
+    # Extracting training and test sets for features and target variable
     x_train = data ['x_train']
     x_test = data ['x_test']
     y_train = data ['y_train']
     y_test = data ['y_test']
 
+    # Converting lists to pandas DataFrames for easier manipulation
     pd_x_train = pd.DataFrame(x_train)
     pd_x_test = pd.DataFrame(x_test)
     pd_y_train = pd.DataFrame(y_train)
     pd_y_test = pd.DataFrame(y_test)
 
+    # Initializing the Gradient Boosting Regressor model
     gbt = GradientBoostingRegressor()
 
-    # Training Model
+    # Training the model on the training data
     gbt.fit(pd_x_train,pd_y_train)
 
-    # Model Summary
+    # Predicting the target variable for the test set
     y_pred_gbt = gbt.predict(pd_x_test)
 
+    # Calculating R-squared value for model evaluation
     r_squared = r2_score(pd_y_test,y_pred_gbt)
+    # Calculating RMSE (Root Mean Squared Error) for model evaluation
     rmse = numpy.sqrt(mean_squared_error(pd_y_test,y_pred_gbt))
+    # Preparing final metrics string for output
     r_squared_str = f"R-squared: {r_squared}"
     rmse_str = f"RMSE: {rmse}"
     final_metrics = r_squared_str + ", " + rmse_str
 
-    #print("R_squared :",r_squared)
-    #print("RMSE :",rmse)
+    # Writing the final metrics to a specified output file
     with open(args.gb_error, 'w') as error_file:
         error_file.write(str(final_metrics))
 
@@ -46,8 +55,10 @@ def _linear_regression (args):
 if __name__ == '__main__':
 
     # Defining and parsing the command-line arguments
-    parser = argparse.ArgumentParser(description='Linear regression model')
+    parser = argparse.ArgumentParser(description='Gradient Boosting Regressor model')
+    #Input 
     parser.add_argument('--data', type=str)
+    #Output
     parser.add_argument('--gb_error', type=str)
 
     args = parser.parse_args()
@@ -55,4 +66,4 @@ if __name__ == '__main__':
     # Creating the directory where the output file will be created (the directory may or may not exist).
     Path(args.gb_error).parent.mkdir(parents=True, exist_ok=True)
     
-    _linear_regression(args)
+    _gboost_regressor(args)

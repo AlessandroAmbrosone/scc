@@ -9,7 +9,7 @@ outputs:
 
 implementation:
   container:
-    image: ossalag00/create_featuresv2
+    image: ossalag00/create_features_car
     command: [
       python, create_feature.py,
 
