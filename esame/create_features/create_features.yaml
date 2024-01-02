@@ -3,9 +3,9 @@ description: Process data from  train_dataset
 
 
 inputs:
-- {name: Data, type: LocalPath, description: 'Path where data is stored.'}
+- {name: Data, type: LocalPath, description: 'Path where data is stored.'} 
 outputs:
-- {name: Processed_Data, type: LocalPath, description: 'Path where processed_data will be stored.'}
+- {name: Processed_Data, type: LocalPath, description: 'Path where processed_data will be stored.'} 
 
 implementation:
   container:
@@ -16,7 +16,7 @@ implementation:
       --data,
       {inputPath: Data},
 
-      --process_data,
+      --processed_data,
       {outputPath: Processed_Data},
 
     ]

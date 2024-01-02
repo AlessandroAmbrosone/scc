@@ -1,0 +1,22 @@
+name: Linear Regression model
+description: Evaluation of Linear Regression model
+
+
+inputs:
+- {name: Data, type: LocalPath, description: '  Path where processeddata is stored.'} 
+outputs:
+- {name: Linear Regression Error, type: LocalPath, description: 'Path where linear regression metrics will be stored.'} 
+
+implementation:
+  container:
+    image: ossalag00/create_featuresv2 # da cambiare
+    command: [
+      python, linear_regression.py,
+
+      --data,
+      {inputPath: Data},
+
+      --lr_error,
+      {outputPath: Linear Regression Error},
+
+    ]

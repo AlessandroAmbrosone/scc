@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: house-pipeline-
-  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.22, pipelines.kubeflow.org/pipeline_compilation_time: '2023-12-29T13:06:18.992942',
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.22, pipelines.kubeflow.org/pipeline_compilation_time: '2023-12-31T16:00:38.418594',
     pipelines.kubeflow.org/pipeline_spec: '{"name": "House Pipeline"}'}
   labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.22}
 spec:
@@ -32,10 +32,9 @@ spec:
           data from  train_dataset", "implementation": {"container": {"command": ["python",
           "create_feature.py", "--data", {"inputPath": "Data"}, "--process_data",
           {"outputPath": "Processed_Data"}], "image": "ossalag00/create_featuresv2"}},
-          "inputs": [{"description": "Path where data is stored.", "name": "Data",
-          "type": "LocalPath"}], "name": "Create feture Function", "outputs": [{"description":
-          "Path where processed_data will be stored.", "name": "Processed_Data", "type":
-          "LocalPath"}]}', pipelines.kubeflow.org/component_ref: '{"digest": "8f86cba4ff1be541d6260a3236d544f8613c7932d7e44a8f2d25173d642db2d6",
+          "inputs": [{"name": "Data", "type": "LocalPath"}], "name": "Create feture
+          Function", "outputs": [{"name": "Processed_Data", "type": "LocalPath"}]}',
+        pipelines.kubeflow.org/component_ref: '{"digest": "de27517d52f4e3c9f652fdcbfb6badfe860386c81c8268e7022d160d771ab10c",
           "url": "create_features/create_features.yaml"}'}
   - name: evaluate-best-parameter-for-model-function
     container:

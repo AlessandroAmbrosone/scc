@@ -1,0 +1,22 @@
+name: Gradient boosting Regressor model
+description: Evaluation of Gradient boosting Regressor model
+
+
+inputs:
+- {name: Data, type: LocalPath, description: 'Path where processed data is stored.'} 
+outputs:
+- {name: Gradient boosting Regressor Error, type: LocalPath, description: 'Path where Gradient boosting Regressor metrics will be stored.'} 
+
+implementation:
+  container:
+    image: ossalag00/create_featuresv2 # da cambiare
+    command: [
+      python, g_boost.py,
+
+      --data,
+      {inputPath: Data},
+
+      --gb_error,
+      {outputPath: Gradient boosting Regressor Error},
+
+    ]

@@ -1,0 +1,22 @@
+name: Random Forest model
+description: Evaluation of Random Forest model
+
+
+inputs:
+- {name: Data, type: LocalPath, description: ' Path where processed data is stored.'} 
+outputs:
+- {name: Random Forest Error, type: LocalPath, description: 'Path where Random Forest metrics will be stored.'} 
+
+implementation:
+  container:
+    image: ossalag00/create_featuresv2 # da cambiare
+    command: [
+      python, random_forest.py,
+
+      --data,
+      {inputPath: Data},
+
+      --rf_error,
+      {outputPath: Random Forest Error},
+
+    ]

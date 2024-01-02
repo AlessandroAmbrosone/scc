@@ -3,37 +3,51 @@ import argparse
 import pandas as pd
 import numpy as np 
 from pathlib import Path
-
 from sklearn.model_selection import train_test_split
 
 def _load_data(args):
 
-    # Loading Training and Test Data
-    train_data_file = "train.csv"
-    #test_data_file = "test.csv"
-
-    df_X_train = pd.read_csv(train_data_file, index_col='Id')
-    #X_test = pd.read_csv(test_data_file, index_col='Id')
-
-    df_X_train.dropna(axis=0, subset=['SalePrice'], inplace=True)
-    y_train = df_X_train.SalePrice              
-    df_X_train.drop(['SalePrice'], axis=1, inplace=True)
-
-    x_train, x_test, y_train, y_test = train_test_split(df_X_train, y_train, test_size=0.2)
-    #x_train.head()
+    # Loading Training Data
+    train_data_file = "car_price_data1.csv"
     
-    x_train, x_test, y_train , y_test = x_train.to_numpy(), x_test.to_numpy(), y_train.to_numpy(), y_test.to_numpy()
+
+    df_X_train = pd.read_csv(train_data_file)
+    
+    df_X_train.drop(['Model'], axis=1, inplace=True)
+    df_X_train.dropna()
+    q = df_X_train['Price'].quantile(0.99)
+    data_1 = df_X_train[df_X_train['Price']<q] #nuovo dataframe
+    q1 = data_1['Mileage'].quantile(0.99)
+    data_2 = data_1[data_1['Mileage']<q1] #nuovo dataframe
+    q2 = data_2['Year'].quantile(0.01)
+    data_3 = data_2[data_2['Year']>q2] #nuovo dataframe
+    data_4 = data_3[data_3['EngineV']<6.5] #cilindrata espressa in l
+    cleaned_data = data_4.reset_index(drop=True)
+
+    #trasformo prezzi in log
+    log_price = np.log(cleaned_data['Price'])
+
+    # Then we add it to our data frame
+    cleaned_data['log_price'] = log_price
+    
+    cleaned_data = cleaned_data.drop(['Price'],axis=1) 
+    
+    
+    
+    #cleaned_data_num = cleaned_data.to_numpy()
+    #data = {'dataframe': cleaned_data_num.tolist()}
+    cleaned_data.to_json(args.data,orient='columns')
 
     # Creates `data` structure to save and 
     # share train and test datasets.
-    data = {'x_train': x_train.tolist(), 'y_train': y_train.tolist(), 'x_test': x_test.tolist(), 'y_test': y_test.tolist()}
+    #data = {'x_train': x_train.tolist(), 'y_train': y_train.tolist(), 'x_test': x_test.tolist(), 'y_test': y_test.tolist()}
 
     # Creates a json object based on `data`
-    data_json = json.dumps(data)
+    #data_json = json.dumps(data)
 
     # Saves the json object into a file
-    with open(args.data, 'w') as out_file:
-        json.dump(data_json, out_file)
+    #with open(args.data, 'w') as out_file:
+        #json.dump(data_json, out_file)
 
 if __name__ == '__main__':
     

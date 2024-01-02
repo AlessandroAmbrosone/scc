@@ -1,12 +1,9 @@
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.model_selection import cross_val_score
 import json
 import argparse
 import pandas as pd
 from pathlib import Path
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 #dovremmo vedere come passare le cose da load_data a qui , credo basti caricare il json, vedere come fa in decision_tree il prof
 #magari questa parte si può anche mettere in load_data, anche se queste colonne gli servono poi per il modello, quindi boh..
@@ -16,67 +13,48 @@ from pathlib import Path
 def _process_data(args):
 
     # Open and reads file "data"
-    with open(args.data) as data_file:
-        data = json.load(data_file)
+    #with open(args.data) as data_file:
+        #data = json.load(data_file)
     
     # The excted data type is 'dict', however since the file
     # was loaded as a json object, it is first loaded as a string
     # thus we need to load again from such string in order to get 
     # the dict-type object.
-    data = json.loads(data)
+    #data = json.loads(data)
 
+    pd_X = pd.read_json(args.data,orient='columns')
+    
+    #pd_X = data['dataframe']
+    #pd_X = pd.DataFrame(pd_X)
+
+    X_with_dummies = pd.get_dummies(pd_X,dtype=int)
+
+
+    X = X_with_dummies.drop('log_price',axis=1)
+    y = X_with_dummies['log_price']
     
 
-    X_train = data['x_train']
-    X_test = data['x_test']
-    df_x_train = pd.DataFrame(X_train)
-    df_x_test = pd.DataFrame(X_test)
+    scaler = StandardScaler()
+    scaler.fit(X[['Mileage','EngineV']])
 
-    low_cardinality_columns = [col for col in df_x_train.columns if df_x_train[col].nunique() < 10 and df_x_train[col].dtype == "object"]
-    num_columns = [col for col in df_x_train.columns if df_x_train[col].dtype in ["int64", "float64"]]
+    
+    # It is not usually recommended to standardize dummy variables
+    #For ML purposes we rarely put too much thought into it and go with the scale dummies as 
+    #scaling has no effect on their predictive power.
+    inputs_scaled = scaler.transform(X[['Mileage','EngineV']])
+    scaled_data = pd.DataFrame(inputs_scaled,columns=['Mileage','EngineV'])
+    input_scaled2 =scaled_data.join(X.drop(['Mileage','EngineV'],axis=1))
+    
 
-    required_columns = low_cardinality_columns + num_columns
-    high_cardinality_columns = [col for col in df_x_train.columns if col not in required_columns]
-
-    low_cardinality_columns_t = [col for col in df_x_test.columns if df_x_test[col].nunique() < 10 and df_x_test[col].dtype == "object"]
-    num_columns_t = [col for col in df_x_test.columns if df_x_test[col].dtype in ["int64", "float64"]]
-
-    required_columns_t = low_cardinality_columns_t + num_columns_t
-    high_cardinality_columns_t= [col for col in df_x_test.columns if col not in required_columns_t]
-
-    #print(required_columns)
-    #print("Dropped_columns", high_cardinality_columns)
-
-
-    #processor
-
-    numerical_transformer = SimpleImputer(strategy="constant")
-
-    categorical_transformer = Pipeline(steps=[
-        ("imputer", SimpleImputer(strategy="constant")),
-        ("one_hot_encoding", OneHotEncoder(handle_unknown='ignore'))
-    ])
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", numerical_transformer, num_columns),
-            ("categorical", categorical_transformer, low_cardinality_columns)
-        ])
-    preprocessor_t = ColumnTransformer(
-        transformers=[
-            ("num", numerical_transformer, num_columns_t),
-            ("categorical", categorical_transformer, low_cardinality_columns_t)
-        ])
-
-    processed_data_train = preprocessor.fit_transform(df_x_train)
-    processed_data_test = preprocessor_t.fit_transform(df_x_test)
-    print(processed_data_train.shape[1], processed_data_test.shape[1])
+    x_train, x_test, y_train, y_test = train_test_split(input_scaled2,y,test_size=0.2, random_state=365)
 
     # Creates a json object based on `data`
-    processed_data = {'x_train': processed_data_train.tolist(),'y_train' : data['y_train'],'x_test': processed_data_test.tolist(), 'y_test' : data['y_test']} #forse da aggiungere qui anche X_test, se no come predicto dopo in train??
+    x_train_n,x_test_n,y_train_n,y_test_n = x_train.to_numpy(), x_test.to_numpy(), y_train.to_numpy(),  y_test.to_numpy()
+    
+    processed_data = {'x_train': x_train_n.tolist(),'y_train' : y_train_n.tolist(),'x_test': x_test_n.tolist(), 'y_test' : y_test_n.tolist()} #forse da aggiungere qui anche X_test, se no come predicto dopo in train??
 
     # Saves the json object into a file
-    with open(args.process_data, 'w') as out_file:
+    with open(args.processed_data, 'w') as out_file:
         json.dump(processed_data, out_file)
 
 
@@ -85,11 +63,11 @@ if __name__ == '__main__':
     # Defining and parsing the command-line arguments
     parser = argparse.ArgumentParser(description='My process data')
     parser.add_argument('--data', type=str)
-    parser.add_argument('--process_data', type=str)
+    parser.add_argument('--processed_data', type=str)
 
     args = parser.parse_args()
 
     # Creating the directory where the output file will be created (the directory may or may not exist).
-    Path(args.process_data).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.processed_data).parent.mkdir(parents=True, exist_ok=True)
     
     _process_data(args)
