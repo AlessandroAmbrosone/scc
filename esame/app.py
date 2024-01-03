@@ -41,8 +41,8 @@ def prepare_data(mileage, enginev, year, brand, body, engine_type, registration)
 # Titolo e introduzione dell'applicazione
 st.title('Car Price Prediction App')
 st.write('This app predicts the price of a car based on various features like brand, body type, engine type, and more.')
-image = Image.open('path_to_car_image.jpg')  # Aggiungi il percorso dell'immagine
-st.image(image, use_column_width=True)
+#image = Image.open('path_to_car_image.jpg')  # Aggiungi il percorso dell'immagine
+#st.image(image, use_column_width=True)
 
 # Creare un form di input per i dati dell'utente
 with st.form("input_form"):
@@ -65,7 +65,7 @@ if submit_button:
     row = prepare_data(mileage, enginev, year, brand, body, engine_type, registration)
     
     # Caricare il modello e lo scaler
-    model, scaler = load('scaler.joblib', 'trainerd_gbt_model.joblib')  # Aggiungi i percorsi corretti
+    scaler,model = load('scaler.joblib', 'trained_gbt_model.joblib')  # Aggiungi i percorsi corretti
 
     # Effettua la previsione
     predicted_price = inference(row, model, scaler)

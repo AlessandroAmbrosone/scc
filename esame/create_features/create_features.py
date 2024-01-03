@@ -1,9 +1,11 @@
 import json
 import argparse
 import pandas as pd
+import joblib
 from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+
 
 
 
@@ -29,7 +31,7 @@ def _process_data(args):
     #this step is preparing the scaler to standardize the 'Mileage' and 'EngineV' columns. 
     #It calculates and stores the necessary statistics (mean and standard deviation) based on the data in these columns
     scaler.fit(X[['Mileage','EngineV']])
-
+    joblib.dump(scaler, 'scaler.joblib')
     
     # It is not usually recommended to standardize dummy variables
     #For ML purposes we rarely put too much thought into it and go with the scale dummies as 

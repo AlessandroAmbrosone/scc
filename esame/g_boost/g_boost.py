@@ -5,6 +5,7 @@ import json
 import argparse
 import pandas as pd
 import numpy
+import joblib
 from pathlib import Path
 
 
@@ -34,6 +35,7 @@ def _gboost_regressor (args):
     pd_y_train_t = numpy.squeeze(pd_y_train) #reshape the pd_y_train in order to have a 1d vector
     gbt.fit(pd_x_train,pd_y_train_t)
 
+    joblib.dump(gbt, 'trained_gbt_model.joblib')  # Choose an appropriate filename
     # Predicting the target variable for the test set
     y_pred_gbt = gbt.predict(pd_x_test)
 
