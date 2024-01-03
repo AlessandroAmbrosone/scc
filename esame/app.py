@@ -4,8 +4,9 @@ import pandas as pd
 from PIL import Image
 from sklearn.preprocessing import StandardScaler
 
+
 # Funzione per caricare il modello e lo scaler
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def load(model_path, scaler_path):
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
@@ -41,8 +42,8 @@ def prepare_data(mileage, enginev, year, brand, body, engine_type, registration)
 # Titolo e introduzione dell'applicazione
 st.title('Car Price Prediction App')
 st.write('This app predicts the price of a car based on various features like brand, body type, engine type, and more.')
-#image = Image.open('path_to_car_image.jpg')  # Aggiungi il percorso dell'immagine
-#st.image(image, use_column_width=True)
+image = Image.open('photo_stream.jpg')  
+st.image(image, use_column_width=True)
 
 # Creare un form di input per i dati dell'utente
 with st.form("input_form"):
