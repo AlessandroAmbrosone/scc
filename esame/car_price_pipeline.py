@@ -36,7 +36,7 @@ def car_price_pipeline():
     g_boost_task = g_boost(create_features_task.output)
 
     # Combine outputs from different models and show results
-    show_results(linear_regression_task.output, random_forest_task, g_boost_task)
+    show_results(linear_regression_task.output, random_forest_task.output, g_boost_task.output)
 
 # Compile the pipeline into a yaml file when the script is run
 if __name__ == '__main__':

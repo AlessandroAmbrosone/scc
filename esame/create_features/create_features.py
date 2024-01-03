@@ -16,6 +16,7 @@ def _process_data(args):
     
     #Creating Dummie Variables (One hot encoding)
     X_with_dummies = pd.get_dummies(pd_X,dtype=int)
+    
 
     #Drop the Price column cause is useless
     X = X_with_dummies.drop('log_price',axis=1)
@@ -45,9 +46,9 @@ def _process_data(args):
     #This effectively replaces the original 'Mileage' and 'EngineV' columns in X with their scaled versions.
     #The final result, input_scaled2, is a DataFrame that includes the scaled 'Mileage' and 'EngineV' features alongside the other, 
     #unscaled features of the original dataset X.
-    input_scaled2 =scaled_data.join(X.drop(['Mileage','EngineV'],axis=1))
+    input_scaled2 = scaled_data.join(X.drop(['Mileage','EngineV'],axis=1))
     
-
+    print(input_scaled2.columns)
     x_train, x_test, y_train, y_test = train_test_split(input_scaled2,y,test_size=0.2, random_state=365)
 
     # Creates a json object based on `data`

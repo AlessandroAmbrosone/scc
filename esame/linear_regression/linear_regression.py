@@ -31,7 +31,9 @@ def _linear_regression (args):
     lr = LinearRegression()
 
     # Train the model with the training data
-    lr.fit(pd_x_train,pd_y_train)
+    pd_y_train_t = numpy.squeeze(pd_y_train) #reshape the pd_y_train in order to have a 1d vector
+    print(pd_x_train.head)
+    lr.fit(pd_x_train,pd_y_train_t)
 
     # Make predictions on the test set
     y_pred_lr = lr.predict(pd_x_test)

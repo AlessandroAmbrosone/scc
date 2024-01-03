@@ -1,0 +1,245 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: car-price-pipeline-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.22, pipelines.kubeflow.org/pipeline_compilation_time: '2024-01-03T16:12:18.931136',
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Definition of the main
+      pipeline", "name": "Car price Pipeline"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.22}
+spec:
+  entrypoint: car-price-pipeline
+  templates:
+  - name: car-price-pipeline
+    dag:
+      tasks:
+      - name: create-feture-function
+        template: create-feture-function
+        dependencies: [load-data-function]
+        arguments:
+          artifacts:
+          - {name: load-data-function-Data, from: '{{tasks.load-data-function.outputs.artifacts.load-data-function-Data}}'}
+      - name: gradient-boosting-regressor-model
+        template: gradient-boosting-regressor-model
+        dependencies: [create-feture-function]
+        arguments:
+          artifacts:
+          - {name: create-feture-function-Processed_Data, from: '{{tasks.create-feture-function.outputs.artifacts.create-feture-function-Processed_Data}}'}
+      - name: linear-regression-model
+        template: linear-regression-model
+        dependencies: [create-feture-function]
+        arguments:
+          artifacts:
+          - {name: create-feture-function-Processed_Data, from: '{{tasks.create-feture-function.outputs.artifacts.create-feture-function-Processed_Data}}'}
+      - {name: load-data-function, template: load-data-function}
+      - name: random-forest-model
+        template: random-forest-model
+        dependencies: [create-feture-function]
+        arguments:
+          artifacts:
+          - {name: create-feture-function-Processed_Data, from: '{{tasks.create-feture-function.outputs.artifacts.create-feture-function-Processed_Data}}'}
+      - name: show-results
+        template: show-results
+        dependencies: [gradient-boosting-regressor-model, linear-regression-model,
+          random-forest-model]
+        arguments:
+          parameters:
+          - {name: gradient-boosting-regressor-model-Gradient-boosting-Regressor-Error,
+            value: '{{tasks.gradient-boosting-regressor-model.outputs.parameters.gradient-boosting-regressor-model-Gradient-boosting-Regressor-Error}}'}
+          - {name: linear-regression-model-Linear-Regression-Error, value: '{{tasks.linear-regression-model.outputs.parameters.linear-regression-model-Linear-Regression-Error}}'}
+          - {name: random-forest-model-Random-Forest-Error, value: '{{tasks.random-forest-model.outputs.parameters.random-forest-model-Random-Forest-Error}}'}
+  - name: create-feture-function
+    container:
+      args: []
+      command: [python, create_features.py, --data, /tmp/inputs/Data/data, --processed_data,
+        /tmp/outputs/Processed_Data/data]
+      image: ossalag00/create_features_car
+    inputs:
+      artifacts:
+      - {name: load-data-function-Data, path: /tmp/inputs/Data/data}
+    outputs:
+      artifacts:
+      - {name: create-feture-function-Processed_Data, path: /tmp/outputs/Processed_Data/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Process
+          data from  train_dataset", "implementation": {"container": {"command": ["python",
+          "create_features.py", "--data", {"inputPath": "Data"}, "--processed_data",
+          {"outputPath": "Processed_Data"}], "image": "ossalag00/create_features_car"}},
+          "inputs": [{"description": "Path where data is stored.", "name": "Data",
+          "type": "LocalPath"}], "name": "Create feture Function", "outputs": [{"description":
+          "Path where processed_data will be stored.", "name": "Processed_Data", "type":
+          "LocalPath"}]}', pipelines.kubeflow.org/component_ref: '{"digest": "3183a0e36ab120bc704bfd5c1bc6f4ad2b5c44124dd6a09027bea76b68b432da",
+          "url": "create_features/create_features.yaml"}'}
+  - name: gradient-boosting-regressor-model
+    container:
+      args: []
+      command: [python, g_boost.py, --data, /tmp/inputs/Data/data, --gb_error, /tmp/outputs/Gradient_boosting_Regressor_Error/data]
+      image: ossalag00/g_boost_model
+    inputs:
+      artifacts:
+      - {name: create-feture-function-Processed_Data, path: /tmp/inputs/Data/data}
+    outputs:
+      parameters:
+      - name: gradient-boosting-regressor-model-Gradient-boosting-Regressor-Error
+        valueFrom: {path: /tmp/outputs/Gradient_boosting_Regressor_Error/data}
+      artifacts:
+      - {name: gradient-boosting-regressor-model-Gradient-boosting-Regressor-Error,
+        path: /tmp/outputs/Gradient_boosting_Regressor_Error/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Evaluation
+          of Gradient boosting Regressor model", "implementation": {"container": {"command":
+          ["python", "g_boost.py", "--data", {"inputPath": "Data"}, "--gb_error",
+          {"outputPath": "Gradient boosting Regressor Error"}], "image": "ossalag00/g_boost_model"}},
+          "inputs": [{"description": "Path where processed data is stored.", "name":
+          "Data", "type": "LocalPath"}], "name": "Gradient boosting Regressor model",
+          "outputs": [{"description": "Path where Gradient boosting Regressor metrics
+          will be stored.", "name": "Gradient boosting Regressor Error", "type": "LocalPath"}]}',
+        pipelines.kubeflow.org/component_ref: '{"digest": "4d518a1686ada0ae99bc33ea776dbee75a3d4373d4c1b0e366abcb68aa62316a",
+          "url": "g_boost/g_boost.yaml"}'}
+  - name: linear-regression-model
+    container:
+      args: []
+      command: [python, linear_regression.py, --data, /tmp/inputs/Data/data, --lr_error,
+        /tmp/outputs/Linear_Regression_Error/data]
+      image: ossalag00/linear_regression_model
+    inputs:
+      artifacts:
+      - {name: create-feture-function-Processed_Data, path: /tmp/inputs/Data/data}
+    outputs:
+      parameters:
+      - name: linear-regression-model-Linear-Regression-Error
+        valueFrom: {path: /tmp/outputs/Linear_Regression_Error/data}
+      artifacts:
+      - {name: linear-regression-model-Linear-Regression-Error, path: /tmp/outputs/Linear_Regression_Error/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Evaluation
+          of Linear Regression model", "implementation": {"container": {"command":
+          ["python", "linear_regression.py", "--data", {"inputPath": "Data"}, "--lr_error",
+          {"outputPath": "Linear Regression Error"}], "image": "ossalag00/linear_regression_model"}},
+          "inputs": [{"description": "  Path where processeddata is stored.", "name":
+          "Data", "type": "LocalPath"}], "name": "Linear Regression model", "outputs":
+          [{"description": "Path where linear regression metrics will be stored.",
+          "name": "Linear Regression Error", "type": "LocalPath"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "d14508a560d1023b4ebafa88deef2116c463c53372a0a0baa88f950d53232c22", "url":
+          "linear_regression/linear_regression.yaml"}'}
+  - name: load-data-function
+    container:
+      args: []
+      command: [python, load_data.py, --data, /tmp/outputs/Data/data]
+      image: ossalag00/load_data_car
+    outputs:
+      artifacts:
+      - {name: load-data-function-Data, path: /tmp/outputs/Data/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Load
+          data from local dataset", "implementation": {"container": {"command": ["python",
+          "load_data.py", "--data", {"outputPath": "Data"}], "image": "ossalag00/load_data_car"}},
+          "name": "Load Data Function", "outputs": [{"description": "Path where data
+          will be stored.", "name": "Data", "type": "LocalPath"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "fd5e1d29be6e34ede01b392ca8a0f43f64b409f1cb631c73c14e018643385551", "url":
+          "load_data/load_data.yaml"}'}
+  - name: random-forest-model
+    container:
+      args: []
+      command: [python, random_forest.py, --data, /tmp/inputs/Data/data, --rf_error,
+        /tmp/outputs/Random_Forest_Error/data]
+      image: ossalag00/random_forest_model
+    inputs:
+      artifacts:
+      - {name: create-feture-function-Processed_Data, path: /tmp/inputs/Data/data}
+    outputs:
+      parameters:
+      - name: random-forest-model-Random-Forest-Error
+        valueFrom: {path: /tmp/outputs/Random_Forest_Error/data}
+      artifacts:
+      - {name: random-forest-model-Random-Forest-Error, path: /tmp/outputs/Random_Forest_Error/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Evaluation
+          of Random Forest model", "implementation": {"container": {"command": ["python",
+          "random_forest.py", "--data", {"inputPath": "Data"}, "--rf_error", {"outputPath":
+          "Random Forest Error"}], "image": "ossalag00/random_forest_model"}}, "inputs":
+          [{"description": "Path where processed data is stored.", "name": "Data",
+          "type": "LocalPath"}], "name": "Random Forest model", "outputs": [{"description":
+          "Path where Random Forest metrics will be stored.", "name": "Random Forest
+          Error", "type": "LocalPath"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "6753561b13f247b7cab41f973531be11ba383e42dc9d9c42b7c41d657b342af1", "url":
+          "random_forest/random_forest.yaml"}'}
+  - name: show-results
+    container:
+      args: [--linear-regression, '{{inputs.parameters.linear-regression-model-Linear-Regression-Error}}',
+        --random-forest, '{{inputs.parameters.random-forest-model-Random-Forest-Error}}',
+        --g-boost, '{{inputs.parameters.gradient-boosting-regressor-model-Gradient-boosting-Regressor-Error}}']
+      command:
+      - sh
+      - -ec
+      - |
+        program_path=$(mktemp)
+        printf "%s" "$0" > "$program_path"
+        python3 -u "$program_path" "$@"
+      - |
+        def show_results(linear_regression, random_forest, g_boost):
+
+            # Print results from different machine learning models
+            print(f"linear regression: {linear_regression}")
+            print(f"random forest: {random_forest}")
+            print(f"gredient boost: {g_boost}")
+
+        import argparse
+        _parser = argparse.ArgumentParser(prog='Show results', description='')
+        _parser.add_argument("--linear-regression", dest="linear_regression", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--random-forest", dest="random_forest", type=str, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--g-boost", dest="g_boost", type=str, required=True, default=argparse.SUPPRESS)
+        _parsed_args = vars(_parser.parse_args())
+
+        _outputs = show_results(**_parsed_args)
+      image: python:3.7
+    inputs:
+      parameters:
+      - {name: gradient-boosting-regressor-model-Gradient-boosting-Regressor-Error}
+      - {name: linear-regression-model-Linear-Regression-Error}
+      - {name: random-forest-model-Random-Forest-Error}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+          {"args": ["--linear-regression", {"inputValue": "linear_regression"}, "--random-forest",
+          {"inputValue": "random_forest"}, "--g-boost", {"inputValue": "g_boost"}],
+          "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf \"%s\" \"$0\" >
+          \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n", "def show_results(linear_regression,
+          random_forest, g_boost):\n\n    # Print results from different machine learning
+          models\n    print(f\"linear regression: {linear_regression}\")\n    print(f\"random
+          forest: {random_forest}\")\n    print(f\"gredient boost: {g_boost}\")\n\nimport
+          argparse\n_parser = argparse.ArgumentParser(prog=''Show results'', description='''')\n_parser.add_argument(\"--linear-regression\",
+          dest=\"linear_regression\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--random-forest\",
+          dest=\"random_forest\", type=str, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--g-boost\",
+          dest=\"g_boost\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args
+          = vars(_parser.parse_args())\n\n_outputs = show_results(**_parsed_args)\n"],
+          "image": "python:3.7"}}, "inputs": [{"name": "linear_regression"}, {"name":
+          "random_forest"}, {"name": "g_boost"}], "name": "Show results"}', pipelines.kubeflow.org/component_ref: '{}',
+        pipelines.kubeflow.org/arguments.parameters: '{"g_boost": "{{inputs.parameters.gradient-boosting-regressor-model-Gradient-boosting-Regressor-Error}}",
+          "linear_regression": "{{inputs.parameters.linear-regression-model-Linear-Regression-Error}}",
+          "random_forest": "{{inputs.parameters.random-forest-model-Random-Forest-Error}}"}'}
+  arguments:
+    parameters: []
+  serviceAccountName: pipeline-runner

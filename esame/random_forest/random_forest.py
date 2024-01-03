@@ -33,7 +33,8 @@ def _random_forest (args):
     rf = RandomForestRegressor()
 
     # Train the model with the training data
-    rf.fit(pd_x_train,pd_y_train)
+    pd_y_train_t = numpy.squeeze(pd_y_train) #reshape the pd_y_train in order to have a 1d vector
+    rf.fit(pd_x_train,pd_y_train_t)
 
     # Make predictions on the test set
     y_pred_rf = rf.predict(pd_x_test)
