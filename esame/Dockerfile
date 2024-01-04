@@ -17,3 +17,4 @@ COPY . /app
 ENTRYPOINT ["streamlit", "run"]
 # Run the application:
 CMD ["app.py"]
+

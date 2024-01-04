@@ -22,5 +22,3 @@ Verify that the Kubeflow Pipelines UI is accessible by port-forwarding:
     
 kubectl get pods --namespace=kubeflow -> per vedere stato dei pods, credo finchè non sono tutti in running mi da problemi la dashboard
 
-##
-errore della pipeline potrebbe essere dovuto a  output troppo lungo...
