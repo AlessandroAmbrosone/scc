@@ -1,0 +1,41 @@
+Per gestire un carico di lavoro più elevato con un picco di richieste più alto, è possibile apportare alcune modifiche al tuo file di manifestazione di Kubernetes (YAML). Di seguito sono riportate alcune raccomandazioni:
+
+Repliche del Deployment:
+Aumenta il numero di repliche del tuo deployment per gestire un carico maggiore distribuendo le richieste tra più pod. Ad esempio, puoi aumentare il numero di repliche a 5 o 10:
+Limiti di risorse per i container:
+
+Specifica limiti di risorse per i tuoi container per evitare che un pod consumi tutte le risorse disponibili. Questo può essere fatto aggiungendo i seguenti campi alla tua definizione del container:
+spec:
+  containers:
+  - name: car_price
+    image: adellacioppa/diabetes #da cambiare
+    resources:
+      limits:
+        cpu: "2" # Limita la CPU a 2 core
+        memory: "4Gi" # Limita la memoria a 4 gigabyte
+
+Horizontal Pod Autoscaler (HPA):
+Considera l'uso di un Horizontal Pod Autoscaler per scalare automaticamente il numero di repliche in base al carico di lavoro. Puoi configurare l'HPA aggiungendo il seguente blocco di definizione:
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: car-price-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: car_price
+  minReplicas: 2
+  maxReplicas: 10  # o qualsiasi valore massimo ragionevole
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 70 # o qualsiasi percentuale desiderata
+
+
+Aumenta le risorse del tuo cluster:
+Se il tuo cluster ha risorse limitate, considera l'aumento delle risorse. Ad esempio, puoi aumentare il numero di nodi nel tuo cluster o utilizzare nodi con risorse hardware più elevate.
+
+Ottimizzazione delle immagini:
+Assicurati che le immagini dei tuoi container siano ottimizzate e non contengano pacchetti superflui.
