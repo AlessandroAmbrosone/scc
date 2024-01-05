@@ -1,9 +1,11 @@
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 import json
 import argparse
 import pandas as pd
+import joblib
 import numpy
 from pathlib import Path
 
@@ -32,12 +34,29 @@ def _random_forest (args):
     # Initialize a Random Forest Regressor model
     rf = RandomForestRegressor()
 
+    # Define a parameter grid to search over
+    param_grid = {
+        'n_estimators': [100, 200, 300],
+        'max_depth': [None, 10, 20, 30],
+        'min_samples_split': [2, 5, 10]
+    }
+
+    # Initialize Grid Search with the Random Forest model
+    grid_search = GridSearchCV(rf, param_grid, cv=5, scoring='neg_mean_squared_error')
+
     # Train the model with the training data
     pd_y_train_t = numpy.squeeze(pd_y_train) #reshape the pd_y_train in order to have a 1d vector
-    rf.fit(pd_x_train,pd_y_train_t)
+    grid_search.fit(pd_x_train,pd_y_train_t)
+
+    # The best estimator after grid search
+    best_model = grid_search.best_estimator_
+    joblib.dump(best_model, 'trained_rf_model.joblib')
+    
+    # Optionally, you can also print the best parameters
+    print("Best parameters:", grid_search.best_params_)
 
     # Make predictions on the test set
-    y_pred_rf = rf.predict(pd_x_test)
+    y_pred_rf = best_model.predict(pd_x_test)
 
     # Calculate R-squared value for model evaluation
     r_squared = r2_score(pd_y_test,y_pred_rf)
