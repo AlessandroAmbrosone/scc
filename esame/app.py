@@ -42,8 +42,7 @@ def prepare_data(mileage, enginev, year, brand, body, engine_type, registration)
 # Titolo e introduzione dell'applicazione
 st.title('Car Price Prediction App')
 st.write('This app predicts the price of a car based on various features like brand, body type, engine type, and more.')
-image = Image.open('photo_stream.jpg')  
-st.image(image, use_column_width=True)
+
 
 # Creare un form di input per i dati dell'utente
 with st.form("input_form"):
