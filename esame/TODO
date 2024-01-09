@@ -1,9 +1,0 @@
-Abbiamo caricato anche su docker Hub fino al component best_param, sembra funzionare (da rifare poichè sono cambiate delle cose)
-Ora da fare c'è:
-    - sistemare component train, ho messo anche predict dentro qua, ma non va a buon fine, leggi train.py
-    -creare la pipeleine principale, dove prendiamo i risultati del component train(da vedere come poichè abbiamo chiave come stringa),
-    che sarebbe i migliori parametri da usare
-    -caricare il modello con quei parametri
-    -fare le prediction
-    -creare la pipeline vera e propria come in Diabetes_pipeline, quindi tipo:
-        load_data-> processed_data-> train ->.....
